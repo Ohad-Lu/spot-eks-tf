@@ -126,11 +126,10 @@ resource "aws_route_table_association" "public-subnets-rt-association-02" {
   route_table_id = aws_route_table.public-rt.id
 }
 
-
-
-resource "aws_eks_cluster" "example" {
+resource "aws_eks_cluster" "eks-cluster" {
   name     = "ohad-eks-01"
   role_arn = aws_iam_role.cluster-role.arn
+  version = "1.23"
 
   vpc_config {
     subnet_ids = [aws_subnet.private-subnet-01.id, aws_subnet.private-subnet-02.id]
@@ -169,5 +168,23 @@ resource "aws_iam_role_policy_attachment" "cluster-role-AmazonEKSClusterPolicy-a
 }
 
 
+variable "addons_names_eks" {
+  type = set(string)
+  default = ["vpc-cni", "coredns", "kube-proxy"]
+}
 
-##########
+
+resource "aws_eks_addon" "example" {
+  cluster_name = aws_eks_cluster.eks-cluster.name
+  for_each = var.addons_names_eks
+  addon_name   = each.value
+}
+
+
+
+
+
+# TODO: 
+#   - addons: Amazon VPC CNI, CoreDNS, kube-proxy
+#   - nodes
+#   - modulate - vpc and eks
